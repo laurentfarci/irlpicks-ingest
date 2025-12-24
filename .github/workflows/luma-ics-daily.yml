@@ -1,0 +1,30 @@
+name: Luma ICS Daily Ingest
+
+on:
+  schedule:
+    - cron: "15 16 * * *" # daily 16:15 UTC
+  workflow_dispatch: {}
+
+jobs:
+  ingest:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run ingest
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE: ${{ secrets.SUPABASE_SERVICE_ROLE }}
+          LUMA_ICS_URL: ${{ secrets.LUMA_ICS_URL }}
+          DEFAULT_CITY: ${{ secrets.DEFAULT_CITY }}
+          DEFAULT_TZ: ${{ secrets.DEFAULT_TZ }}
+        run: node ingest-luma-ics.mjs
