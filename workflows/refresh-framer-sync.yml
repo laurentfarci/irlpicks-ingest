@@ -1,0 +1,33 @@
+name: Refresh Framer Sync Table
+
+on:
+  workflow_dispatch:
+  schedule:
+    # Every 10 minutes (UTC). Adjust if you want.
+    - cron: "*/10 * * * *"
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call Supabase RPC to refresh framer_events_sync
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE: ${{ secrets.SUPABASE_SERVICE_ROLE }}
+        run: |
+          set -euo pipefail
+
+          if [ -z "${SUPABASE_URL}" ] || [ -z "${SUPABASE_SERVICE_ROLE}" ]; then
+            echo "Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE secret"
+            exit 1
+          fi
+
+          echo "Refreshing framer_events_sync via RPC..."
+          curl -sS -X POST "${SUPABASE_URL}/rest/v1/rpc/refresh_framer_events_sync" \
+            -H "Content-Type: application/json" \
+            -H "apikey: ${SUPABASE_SERVICE_ROLE}" \
+            -H "Authorization: Bearer ${SUPABASE_SERVICE_ROLE}" \
+            --data '{}' \
+            --fail
+
+          echo "Done."
